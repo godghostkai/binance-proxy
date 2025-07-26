@@ -1,27 +1,19 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-
-app.all('*', async (req, res) => {
-  const binanceUrl = 'https://api.binance.com' + req.originalUrl;
+app.get('/api/*', async (req, res) => {
+  const targetURL = 'https://api.binance.com' + req.originalUrl.replace('/api', '');
   try {
-    const response = await fetch(binanceUrl, {
-      method: req.method,
-      headers: {
-        'X-MBX-APIKEY': req.headers['x-mbx-apikey'] || '',
-      },
-      body: req.method === 'GET' ? null : JSON.stringify(req.body),
-    });
-    const data = await response.text();
-    res.status(response.status).send(data);
+    const response = await fetch(targetURL);
+    const data = await response.json();
+    res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to fetch from Binance API' });
   }
 });
 
-app.listen(port, () => {
-  console.log(`Binance proxy running on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`Proxy server running on port ${PORT}`);
 });
